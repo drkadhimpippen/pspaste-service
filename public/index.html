@@ -32,51 +32,100 @@
             background-color: #ffebee;
             color: #c62828;
         }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>PS Suite Paste Service</h1>
         <div id="status"></div>
+        <button id="pasteButton" class="button">Click to Paste</button>
         <script>
-            function simulatePaste() {
+            async function simulatePaste() {
                 const statusDiv = document.getElementById('status');
                 try {
-                    // Focus the parent/opener window if it exists
+                    // Try to read from clipboard using the modern Clipboard API
+                    const text = await navigator.clipboard.readText();
+                    
+                    // Create a keydown event for Ctrl+V
+                    const pasteEvent = new KeyboardEvent('keydown', {
+                        key: 'v',
+                        code: 'KeyV',
+                        ctrlKey: true,
+                        bubbles: true,
+                        cancelable: true
+                    });
+
+                    // Focus the parent window if it exists
                     if (window.opener) {
                         window.opener.focus();
+                        window.opener.document.dispatchEvent(pasteEvent);
                     }
-                    
-                    // Create a hidden button that will trigger the AutoHotkey script
-                    const button = document.createElement('button');
-                    button.style.display = 'none';
-                    button.onclick = function() {
-                        // This will be handled by AutoHotkey
-                        window.location.href = 'file:///C:/Users/amjed/Desktop/Cursor%20Tutorial/PasteClipboard.exe';
-                    };
-                    document.body.appendChild(button);
-                    
-                    // Click the button after a short delay to ensure window focus has changed
-                    setTimeout(() => {
-                        button.click();
-                        // Remove the button
-                        document.body.removeChild(button);
-                        // Show success message
-                        statusDiv.textContent = 'Pasting...';
-                        statusDiv.className = 'success';
-                        // Close this window
-                        setTimeout(() => {
-                            window.close();
-                        }, 100);
-                    }, 100);
+
+                    // Also try document.execCommand as a fallback
+                    document.execCommand('paste');
+
+                    // Show success message
+                    statusDiv.textContent = 'Attempting to paste... If nothing happens, please click the button below.';
+                    statusDiv.className = 'success';
+
                 } catch (error) {
-                    console.error('Action failed:', error);
-                    statusDiv.textContent = 'Error: ' + error.message;
+                    console.error('Paste failed:', error);
+                    statusDiv.textContent = 'Please click the button below to paste';
                     statusDiv.className = 'error';
                 }
             }
 
-            // Execute when the page loads
+            // Add click handler for manual paste button
+            document.getElementById('pasteButton').onclick = function() {
+                // Create and dispatch keyboard events
+                const ctrlDown = new KeyboardEvent('keydown', {
+                    key: 'Control',
+                    code: 'ControlLeft',
+                    bubbles: true,
+                    cancelable: true
+                });
+
+                const vDown = new KeyboardEvent('keydown', {
+                    key: 'v',
+                    code: 'KeyV',
+                    ctrlKey: true,
+                    bubbles: true,
+                    cancelable: true
+                });
+
+                // Focus the parent window if it exists
+                if (window.opener) {
+                    window.opener.focus();
+                    window.opener.document.dispatchEvent(ctrlDown);
+                    window.opener.document.dispatchEvent(vDown);
+                }
+
+                // Show message
+                const statusDiv = document.getElementById('status');
+                statusDiv.textContent = 'Paste command sent!';
+                statusDiv.className = 'success';
+
+                // Close window after a short delay
+                setTimeout(() => {
+                    window.close();
+                }, 500);
+            };
+
+            // Execute initial paste attempt when page loads
             window.onload = simulatePaste;
         </script>
     </div>
