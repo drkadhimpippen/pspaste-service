@@ -9,31 +9,74 @@
             margin: 0;
             padding: 20px;
             font-family: Arial, sans-serif;
+            background: #f5f5f5;
         }
         .container {
             max-width: 600px;
             margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>PS Suite Paste Service</h1>
+        <div id="status"></div>
         <script>
-            // Execute paste when the page loads
-            window.onload = function() {
+            async function performPaste() {
+                const statusDiv = document.getElementById('status');
                 try {
-                    // Attempt to trigger paste
-                    document.execCommand('paste');
+                    // Try to read from clipboard using the modern Clipboard API
+                    const text = await navigator.clipboard.readText();
+                    
+                    // Create a temporary textarea
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    document.body.appendChild(textarea);
+                    
+                    // Select and focus the textarea
+                    textarea.select();
+                    textarea.focus();
+                    
+                    // Try to paste using document.execCommand
+                    const success = document.execCommand('paste');
+                    
+                    // Clean up
+                    document.body.removeChild(textarea);
+                    
+                    // Show success message
+                    statusDiv.textContent = 'Content ready to paste!';
+                    statusDiv.className = 'success';
                     
                     // Close the window after a brief delay
                     setTimeout(() => {
                         window.close();
-                    }, 100);
+                    }, 500);
                 } catch (error) {
                     console.error('Paste failed:', error);
+                    statusDiv.textContent = 'Error: ' + error.message;
+                    statusDiv.className = 'error';
                 }
-            };
+            }
+
+            // Execute when the page loads
+            window.onload = performPaste;
         </script>
     </div>
 </body>
