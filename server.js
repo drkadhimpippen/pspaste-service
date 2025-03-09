@@ -16,6 +16,35 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Auto-execute endpoint
+app.get('/auto', (req, res) => {
+    const html = `
+        <html>
+        <head>
+            <title>PS Suite Paste</title>
+            <script>
+                window.onload = function() {
+                    // Create an invisible iframe to handle the download
+                    var iframe = document.createElement('iframe');
+                    iframe.style.display = 'none';
+                    iframe.src = 'file:///C:/Users/amjed/Desktop/Cursor%20Tutorial/PasteClipboard.exe';
+                    document.body.appendChild(iframe);
+                    
+                    // Close the window after a brief delay
+                    setTimeout(() => {
+                        window.close();
+                    }, 100);
+                }
+            </script>
+        </head>
+        <body>
+            <p>Executing paste...</p>
+        </body>
+        </html>
+    `;
+    res.send(html);
+});
+
 // Direct download endpoint for the batch file
 app.get('/download', (req, res) => {
     res.setHeader('Content-Type', 'application/x-bat');
