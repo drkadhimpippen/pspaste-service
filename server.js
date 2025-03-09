@@ -16,6 +16,20 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Route to serve the batch file
+app.get('/run_paste.bat', (req, res) => {
+    res.setHeader('Content-Type', 'application/x-bat');
+    res.setHeader('Content-Disposition', 'attachment; filename=run_paste.bat');
+    res.sendFile(path.join(__dirname, 'public', 'run_paste.bat'));
+});
+
+// Route to serve the executable
+app.get('/PasteClipboard.exe', (req, res) => {
+    res.setHeader('Content-Type', 'application/x-msdownload');
+    res.setHeader('Content-Disposition', 'attachment; filename=PasteClipboard.exe');
+    res.sendFile(path.join(__dirname, 'public', 'PasteClipboard.exe'));
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.json({ status: 'healthy' });
